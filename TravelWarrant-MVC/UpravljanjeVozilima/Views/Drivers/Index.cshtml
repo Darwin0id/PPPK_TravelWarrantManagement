@@ -1,0 +1,129 @@
+﻿@using UpravljanjeVozilima.Models
+@model IEnumerable<UpravljanjeVozilima.Models.Person>
+@{
+    ViewBag.Title = "Popis vozača";
+}
+
+<div class="d-flex flex-column h-100 bg-light rounded-lg box-shadow-lg p-4">
+<div class="py-2 p-md-3">
+                        
+<!-- NASLOV -->
+<h1 class="h3 mb-3 pb-2 text-center text-sm-left">Popis vozača</h1>
+             
+<!-- VOZAČI (TABLA)-->
+<div class="table-responsive font-size-md">
+    <table class="table table-hover mb-0">
+        <thead>
+            <th>@Html.DisplayNameFor(model => model.FullName)</th>
+            <th>@Html.DisplayNameFor(model => model.Phone)</th>
+            <th>@Html.DisplayNameFor(model => model.DriverLicenseId)</th>
+            <th>Akcije</th>
+        </thead>
+        <tbody>
+       @foreach (var person in Model)
+               {
+                   <tr>
+                       <td class="py-3 align-middle">
+                           @Html.DisplayFor(modelItem => person.FullName)
+                       </td>
+                       <td class="py-3 align-middle">
+                           @Html.DisplayFor(modelItem => person.Phone)
+                       </td>
+                       <td class="py-3 align-middle">
+                           @Html.DisplayFor(modelItem => person.DriverLicenseId)
+                       </td>
+                      <td class="py-3 align-middle">
+ 
+                            @Html.ActionLink(linkText: " ", actionName: "Edit", htmlAttributes: new 
+                            { 
+                                @class = "nav-link-style mr-2 fe-edit"
+                            }, routeValues: new { id = person.IDPerson })                            
+                            
+                            @Html.ActionLink(linkText: " ", actionName: "Delete", htmlAttributes: new 
+                            { 
+                                @class = "nav-link-style mr-2 fe-trash-2 text-danger deleteDriver",
+                                data_delete="true",
+                                data_id=person.IDPerson, 
+                                data_ime=person.FName, 
+                                data_prezime=person.LName
+                            }, routeValues: new { id = person.IDPerson })
+
+
+                      </td>
+                   </tr>
+               }
+        </tbody>
+    </table>
+</div>
+<hr class="pb-4">
+<div class="text-sm-right">
+    <a class="btn btn-primary" href="@Url.Action("Add", "Drivers")">Dodaj vozača</a>
+</div>
+
+</div>
+</div>
+
+<!-- JAVASCRIPT -->
+@section scripts{
+    <script type="text/javascript">
+        //INIT
+        $(document).ready(function () {
+            $("[data-page=default]").addClass("active");
+            isTableEmpty();
+        });
+        
+        //CALLBACK
+        $(document).on("click", "[data-delete=true]", function (e) {
+           e.preventDefault();
+            
+           const { ime, prezime, id } = this.dataset;
+            
+           Swal.fire({
+             title: 'Brisanje',
+             text: "Želite li stvarno obrisati: "+ime+" "+prezime+"!",
+             icon: 'warning',
+             showCancelButton: true,
+             confirmButtonColor: '#3085d6',
+             cancelButtonColor: '#d33',
+             confirmButtonText: 'Da, želim obrisati!',
+             cancelButtonText: 'Odustani'
+           }).then((result) => {
+             if (result.isConfirmed) {
+                $.ajax({
+                    url: '@Url.Action(controllerName: "Drivers", actionName: "Delete")',
+                    data: { id },
+                    statusCode: {
+                        200: function () {
+                            $('.table')
+                                .find(`[data-id=${id}]`)
+                                .parents('tr')
+                                .hide(500).remove();
+                             isTableEmpty();
+                                                        
+                        },
+                        400: function () {          
+                             Swal.fire(
+                                  'Pogreška!',
+                                  'Dogodila se neočekivana pogreška prilikom brisanja vozača iz baze podataka.',
+                                  'Error'
+                            );
+                        }
+                    }
+                })
+                .done(function (data) {
+                     Swal.fire(
+                          'Obrisan!',
+                          'Uspješno ste uklonili vozača iz baze podataka.',
+                          'success'
+                     );
+                })
+                .fail(function (xhr, txtStatus, error) {
+                    console.log('status', xhr.status, 'statusText', xhr.statusText);
+                    console.log('txtStatus', txtStatus);
+                    console.log('error', error);
+                });
+                }
+            })
+        });
+    </script>
+}

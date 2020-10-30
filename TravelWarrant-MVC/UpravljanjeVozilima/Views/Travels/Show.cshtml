@@ -1,0 +1,333 @@
+﻿@using System.Web.UI.WebControls
+@using UpravljanjeVozilima.App_Data
+@using UpravljanjeVozilima.Dal
+@using UpravljanjeVozilima.Models
+@model Travel
+@{
+    ViewBag.Title = "Pregled naloga";
+}
+
+            @using (Html.BeginForm())
+            {
+                @Html.AntiForgeryToken()
+<div class="d-flex flex-column bg-light rounded-lg box-shadow-lg p-2">
+    <div class="py-1 p-md-1">
+        
+        <div class="row">
+
+            <div class="form-group col-4">
+                @Html.LabelFor(model => model.Driver.FullName)
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">
+                            <i class="fe fe-user"></i>
+                        </span>
+                    </div>
+                    @Html.EditorFor(model => model.Driver.FullName, new {htmlAttributes = new {@class = "form-control", disabled = "disabled"}})
+                </div>
+            </div>
+
+
+            <div class="form-group col-4">
+                @Html.LabelFor(model => model.Vehicle.FullTitle)
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">
+                            <i class="fe fe-disc"></i>
+                        </span>
+                    </div>
+                    @Html.EditorFor(model => model.Vehicle.FullTitle, new {htmlAttributes = new {@class = "form-control", disabled = "disabled"}})
+                </div>
+            </div>
+
+            <div class="form-group col-4">
+                @Html.LabelFor(model => model.Status.Title)
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">
+                            <i class="fe fe-sliders"></i>
+                        </span>
+                    </div>
+                    @Html.EditorFor(model => model.Status.Title, new {htmlAttributes = new {@class = "form-control", disabled = "disabled"}})
+                </div>
+            </div>
+
+            <div class="form-group col-6">
+                <label for="StartCordinate">Početak puta</label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">
+                            <i class="fe fe-map-pin"></i>
+                        </span>
+                    </div>
+                     @Html.EditorFor(model => model.StartLocation.Address, new {htmlAttributes = new {@class = "form-control", placeholder="Upišite lokaciju", disabled = "disabled"}})
+                     @Html.HiddenFor(model => model.StartLocation.Cordinate)
+                </div>
+            </div>
+
+            <div class="form-group col-6">
+                <label for="EndCordinate">Kraj puta</label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">
+                            <i class="fe fe-map-pin"></i>
+                        </span>
+                    </div>
+                    @Html.EditorFor(model => model.EndLocation.Address, new {htmlAttributes = new {@class = "form-control", placeholder="Upišite lokaciju", disabled = "disabled"}})
+                    @Html.HiddenFor(model => model.EndLocation.Cordinate)
+                </div>
+            </div>
+
+            <div class="form-group col-4">
+                @Html.LabelFor(model => model.FuelPrice)
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">
+                            <i class="fe fe-dollar-sign"></i>
+                        </span>
+                    </div>
+                    @Html.EditorFor(model => model.FuelPrice, new {htmlAttributes = new {@class = "form-control", disabled = "disabled", placeholder = "0 kn"}})
+                </div>
+            </div>
+
+            <div class="form-group col-4">
+                @Html.LabelFor(model => model.RoadDistance)
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">
+                            <i class="fe fe-globe"></i>
+                        </span>
+                    </div>
+                    @Html.EditorFor(model => model.RoadDistance, new {htmlAttributes = new {@class = "form-control", disabled = "disabled", placeholder = "0 km"}})
+                </div>
+            </div>
+
+                <div class="form-group col-4">
+                    @Html.LabelFor(model => model.TripDuration)
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">
+                                <i class="fe fe-clock"></i>
+                            </span>
+                        </div>
+                        @Html.EditorFor(model => model.TripDuration, new {htmlAttributes = new {@class = "form-control", disabled = "disabled", placeholder = "0 min"}})
+                    </div>
+                </div>
+            
+        </div>
+
+    </div>
+</div>
+            }
+
+
+<div class="d-flex flex-column bg-light rounded-lg box-shadow-lg p-2 mt-2">
+    <div class="py-2 p-md-1">
+
+        <!-- KARTA -->
+        <div id="map"></div>
+
+    </div>
+</div>
+
+
+<!-- JAVASCRIPT -->
+@section scripts{
+    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC0EZPshf30CDVP78eDSBdPgX_qVpBLmZg&sensor=false&callback=initialize&amp;libraries=places"></script>
+    <script type="text/javascript">
+                
+           //CALLBACK
+                $(document).on("submit", "form", function (e) {
+                    e.preventDefault();
+                    const form = $(e.target);
+                    let nalog = {};
+                    
+                    if (form.valid()) {
+                        let disabled = form.find(':input:disabled').removeAttr('disabled');
+                        const params = form.serializeArray();
+                        disabled.attr('disabled','disabled');
+                        
+                        params.forEach(param => {
+                          if (param.name.lastIndexOf('__') !== -1) return;
+                            let propertyName = param.name.substr(param.name.lastIndexOf('.') + 1);
+                                          
+                             if (propertyName === 'StartCordinate') {                                                                                                               
+                                 nalog[propertyName] = markers[findWithAttr(markers, 'data', "marker1")].getPosition().lat()+","+markers[findWithAttr(markers, 'data', "marker1")].getPosition().lng();
+                             } else if (propertyName === 'EndCordinate') {
+                                 nalog[propertyName] = markers[findWithAttr(markers, 'data', "marker2")].getPosition().lat()+","+markers[findWithAttr(markers, 'data', "marker2")].getPosition().lng();
+                             } else if (propertyName === 'StatusID') { 
+                                 nalog.Status = {StatusID: param.value};
+                             } else if (propertyName === 'IDPerson') { 
+                                 nalog.Driver = {IDPerson: param.value};
+                             } else if (propertyName === 'IDVehicle') { 
+                                 nalog.Vehicle = {IDVehicle: param.value};
+                             } else {                   
+                                 nalog[propertyName] = param.value;
+                            }                           
+                          });          
+                                                               
+                        $.ajax({
+                          url: '@Url.Action(controllerName: "Travels", actionName: "Add")',
+                          data: nalog,
+                          method: 'POST',
+                          statusCode: {
+                            200: function () {
+                                Swal.fire({
+                                  icon: 'success',
+                                  title: 'Uspješno ste dodali putnog naloga!',
+                                  showCancelButton: false,
+                                  confirmButtonText: 'Povratak'
+                                }).then((result) => {
+                                  if (result.isConfirmed) {
+                                    var url = '@Url.Action(controllerName: "Travels", actionName: "Index")';
+                                    window.location.href = url;
+                                  }
+                                })
+                            },
+                            400: function () {
+                                Toast.fire({ icon: 'error', title: 'Dogodila se neočekivana pogreška!'})
+                            }
+                           }
+                         })
+                        .fail(function (xhr, txtStatus, error) {
+                            console.log('status', xhr.status, 'statusText', xhr.statusText);
+                            console.log('txtStatus', txtStatus);
+                            console.log('error', error);
+                        });
+                    } else {
+                      Toast.fire({ icon: 'error', title: 'Provjerite jeste li popunili sva polja?'})
+                    }
+                    
+                })    
+    
+    
+        //INIT
+            let map;
+            let geocoder;
+            let markers = [];
+            
+            function findWithAttr(array, attr, value) {
+                for(var i = 0; i < array.length; i += 1) {
+                    if(array[i][attr] === value) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+            
+            function initMap() {
+                const uluru = { lat: 45.8000271, lng: 16.0107775 };
+                map = new google.maps.Map(document.getElementById("map"), {
+                  zoom: 11,
+                  center: uluru,
+                });
+            }
+                        
+            function setMapOnAll(map, i) {
+                markers[i].setMap(map);
+                delete markers[i];
+            }  
+            
+              function clearMarkers(i) {
+                setMapOnAll(null, i);
+              }
+                
+                function initialize() {
+                    initMap();
+                    calculateDistance();
+                }          
+            
+            
+                function calculateDistance() {
+                    let origin = $("#StartLocation_Address").val();
+                    let destination = $("#EndLocation_Address").val();
+                    
+                    console.log(origin)
+                    let service = new google.maps.DistanceMatrixService();
+                    service.getDistanceMatrix({
+                        origins: [origin],
+                        destinations: [destination],
+                        travelMode: google.maps.TravelMode.DRIVING,
+                        unitSystem: google.maps.UnitSystem.IMPERIAL,
+                        avoidHighways: false,
+                        avoidTolls: false
+                    }, callback)
+                }
+            
+                function callback(response, status) {
+                    if(status != 'OK') {
+                        $('#result').html(status);
+                    } else {
+                        let origin = response.originAddresses[0];
+                        let destination = response.destinationAddresses[0];
+                        if(response.rows[0].elements[0].status === "ZERO_RESULSTS") {
+                            $("#result").html("Nažalost ne postoji put između dvije lokacije");
+                        } else {
+                            let distance = response.rows[0].elements[0].distance;
+                            let duration = response.rows[0].elements[0].duration;
+                            
+                            let distance_in_kilo = distance.value / 1000;
+                            let duration_text = duration.text;
+                            let fuelPrice = ((parseFloat(distance_in_kilo)/30)*2)*9.35;                         
+            
+                            $("#RoadDistance").val(distance_in_kilo.toFixed(2)+" km");
+                            $("#TripDuration").val(duration_text);
+                            $("#FuelPrice").val(fuelPrice.toFixed(2)+" kn");
+                        }
+            
+                        let icons = {
+                            start: new google.maps.MarkerImage(
+                             '/UI/img/icon/car.png',
+                             new google.maps.Size( 44, 32 ),
+                             new google.maps.Point( 0, 0 ),
+                             new google.maps.Point( 22, 32 )
+                            ),
+                            end: new google.maps.MarkerImage(
+                             'UI/img/icon/finish.png',
+                             new google.maps.Size( 44, 32 ),
+                             new google.maps.Point( 0, 0 ),
+                             new google.maps.Point( 22, 32 )
+                            )
+                           };
+            
+                        let directionsService = new google.maps.DirectionsService; 
+                        let directionsDisplay = new google.maps.DirectionsRenderer({suppressMarkers: true});
+                        
+                                  
+                        directionsDisplay.setMap(map);
+            
+                        let latlng1 = $("#StartLocation_Cordinate").val().split(",");
+                        let latlng2 = $("#EndLocation_Cordinate").val().split(",");
+                        
+                        let latlng_start = new google.maps.LatLng(parseFloat(latlng1[0]), parseFloat(latlng1[1]));
+                        let latlng_end = new google.maps.LatLng(parseFloat(latlng2[0]), parseFloat(latlng2[1]));
+                        
+                        new google.maps.Marker({
+                            position: latlng_start,
+                            map: map,
+                            data: 'marker1',
+                            icon: {url: "/UI/img/icon/car.png"}
+                        });
+                        
+                        new google.maps.Marker({
+                            position: latlng_end,
+                            map: map,
+                            data: 'marker2',
+                            icon: {url: "/UI/img/icon/finish.png"}
+                       });
+                                                
+                        directionsService.route({
+                            origin: latlng_start,
+                            destination: latlng_end,
+                            travelMode: 'DRIVING'
+                        }, function(response, status) {
+                            if (status === 'OK') {
+                                directionsDisplay.setDirections(response);
+                            } else {
+                                window.alert('Directions request failed due to ' + status);
+                            }
+                        });
+                    }
+                }                               
+    </script>
+}

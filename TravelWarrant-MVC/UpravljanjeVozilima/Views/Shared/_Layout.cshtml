@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <!-- META TAGOVI -->
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <!-- NASLOV -->
+        <title>@ViewBag.Title - Inserter</title>
+
+        <!-- UI -->
+        @Styles.Render("~/UI/css")
+        @Scripts.Render("~/bundles/js") 
+        @RenderSection("scripts", required: false)
+    </head>
+    <body style="background-color: #f7f7fc;">
+        <!-- MAIN -->
+        <main class="cs-page-wrapper">
+            <!-- HEADER -->
+            <header class="cs-header navbar navbar-expand-lg navbar-dark navbar-floating navbar-sticky" data-scroll-header>
+                <div class="container px-0 px-xl-3">
+                    <a class="navbar-brand order-lg-1 mx-auto ml-lg-0 pr-lg-2 mr-lg-4" href="/">
+                        <img class="navbar-floating-logo d-none d-lg-block" width="225" src="/UI/img/logo/light.png" alt="Inserter" />
+                    </a>
+                </div>
+            </header>
+            <!-- // -->
+
+            <!-- PAGE -->
+
+            <!-- BG -->
+            <div class="position-relative bg-gradient" style="height: 480px;">
+                <div class="cs-shape cs-shape-bottom cs-shape-slant bg-secondary d-none d-lg-block">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 260">
+                        <polygon fill="currentColor" points="0,257 0,260 3000,260 3000,0"></polygon>
+                    </svg>
+                </div>
+            </div>
+            <!-- // -->
+
+            <!-- SADRŽAJ -->
+            <div class="container bg-overlay-content pb-4 mb-md-3" style="margin-top: -350px;">
+                <div class="row">
+                    <!-- SIDEBAR -->
+                    <div class="col-lg-4 mb-4 mb-lg-0">
+                        <div class="bg-light rounded-lg box-shadow-lg">
+                            <div class="px-4 py-4 mb-1 text-center">
+                                <img class="d-block mx-auto my-2" width="110" src="/UI/img/icon/kola.png" alt="Kola" />
+                                <h6 class="mb-0 pt-1">Aplikacija</h6>
+                                <h4 class="mb-0">Upravljanje vozilima</h4>
+                            </div>
+
+                            <div class="d-lg-block collapse pb-2" id="account-menu">
+                                <h3 class="d-block bg-secondary font-size-sm font-weight-semibold text-muted mb-0 px-4 py-3">Funkcije</h3>
+                                
+                                <a data-page="default" class="d-flex align-items-center nav-link-style px-4 py-3" href="@Url.Action("Index", "Drivers")"> <i class="fe-users font-size-lg opacity-60 mr-2"></i> Vozači </a>
+                                <a data-page="vehicles" class="d-flex align-items-center nav-link-style px-4 py-3" href="@Url.Action("Index", "Vehicles")"> <i class="fe-disc font-size-lg opacity-60 mr-2"></i> Vozila </a>
+                                <a data-page="travels" class="d-flex align-items-center nav-link-style px-4 py-3" href="@Url.Action("Index", "Travels")"> <i class="fe-file-text font-size-lg opacity-60 mr-2"></i> Putni nalozi </a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- // -->
+
+                    <!-- Content-->
+                    <div class="col-lg-8">
+                        <!-- LOADING -->
+                        @RenderBody()
+                        <!-- // -->
+                    </div>
+                    <!-- // -->
+                </div>
+            </div>
+        </main>
+
+        <!-- PODNOŽJE -->
+        <footer class="cs-footer py-4">
+            <div class="container d-md-flex align-items-center justify-content-between py-2 text-center text-md-left">
+                <p class="font-size-sm mb-0 mr-3 order-md-1"><span class="text-muted mr-1">© All rights reserved. Made by</span> Burek</p>
+            </div>
+        </footer>
+        <!-- // -->
+    </body>
+</html>

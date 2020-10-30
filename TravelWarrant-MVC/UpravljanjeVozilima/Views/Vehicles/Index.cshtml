@@ -1,0 +1,132 @@
+﻿@using UpravljanjeVozilima.Models
+@model IEnumerable<UpravljanjeVozilima.Models.Vehicle>
+@{
+    ViewBag.Title = "Popis vozila";
+}
+
+<div class="d-flex flex-column h-100 bg-light rounded-lg box-shadow-lg p-4">
+<div class="py-2 p-md-3">
+
+<!-- NASLOV -->
+<h1 class="h3 mb-3 pb-2 text-center text-sm-left">Popis vozila</h1>
+
+<!-- VOZAČI (TABLA)-->
+<div class="table-responsive font-size-md">
+    <table class="table table-hover mb-0">
+        <thead>
+            <th>@Html.DisplayNameFor(model => model.Brand.Title)</th>
+            <th>@Html.DisplayNameFor(model => model.Type.Title)</th>
+            <th>@Html.DisplayNameFor(model => model.YearOfManufacture)</th>
+            <th>@Html.DisplayNameFor(model => model.StartingKM)</th>
+            <th>Akcije</th>
+        </thead>
+        <tbody>
+        @foreach (var vehicle in Model)
+                     {
+                         <tr>
+                             <td class="py-3 align-middle">
+                                 @Html.DisplayFor(modelItem => vehicle.Brand.Title)
+                             </td>
+                             <td class="py-3 align-middle">
+                                 @Html.DisplayFor(modelItem => vehicle.Type.Title)
+                             </td>
+                             <td class="py-3 align-middle">
+                                 @Html.DisplayFor(modelItem => vehicle.YearOfManufacture)
+                             </td>
+                             <td class="py-3 align-middle">
+                                 @Html.DisplayFor(modelItem => vehicle.StartingKM)
+                             </td>
+                            <td class="py-3 align-middle">
+       
+                                  @Html.ActionLink(linkText: " ", actionName: "Edit", htmlAttributes: new 
+                                  { 
+                                      @class = "nav-link-style mr-2 fe-edit"
+                                  }, routeValues: new { id = vehicle.IDVehicle })                            
+                                  
+                                  @Html.ActionLink(linkText: " ", actionName: "Delete", htmlAttributes: new 
+                                  { 
+                                      @class = "nav-link-style mr-2 fe-trash-2 text-danger deleteDriver",
+                                      data_delete="true",
+                                      data_tip=vehicle.Type.Title, 
+                                      data_brand=vehicle.Brand.Title,
+                                      data_id=vehicle.IDVehicle
+                                  }, routeValues: new { id = vehicle.IDVehicle })
+      
+      
+                            </td>
+                         </tr>
+                     }
+        </tbody>
+    </table>
+</div>
+<hr class="pb-4">
+<div class="text-sm-right">
+    <a class="btn btn-primary" href="@Url.Action("Add", "Vehicles")">Dodaj vozilo</a>
+</div>
+</div>
+</div>
+
+<!-- JAVASCRIPT -->
+@section scripts{
+    <script type="text/javascript">
+        //INIT
+        $(document).ready(function () {
+            $("[data-page=vehicles]").addClass("active");
+            isTableEmpty();
+        });
+        
+        //CALLBACK
+                $(document).on("click", "[data-delete=true]", function (e) {
+                   e.preventDefault();
+                    
+                   const { tip, brand, id } = this.dataset;
+                                   
+                   Swal.fire({
+                     title: 'Brisanje',
+                     text: "Želite li stvarno obrisati: "+tip+" "+brand+"!",
+                     icon: 'warning',
+                     showCancelButton: true,
+                     confirmButtonColor: '#3085d6',
+                     cancelButtonColor: '#d33',
+                     confirmButtonText: 'Da, želim obrisati!',
+                     cancelButtonText: 'Odustani'
+                   }).then((result) => {
+                     if (result.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action(controllerName: "Vehicles", actionName: "Delete")',
+                            data: { id },
+                            statusCode: {
+                                200: function () {
+                                    $('.table')
+                                        .find(`[data-id=${id}]`)
+                                        .parents('tr')
+                                        .hide(500).remove();
+                                     isTableEmpty();
+                                                                
+                                },
+                                400: function () {          
+                                     Swal.fire(
+                                          'Pogreška!',
+                                          'Dogodila se neočekivana pogreška prilikom brisanja vozača iz baze podataka.',
+                                          'Error'
+                                    );
+                                }
+                            }
+                        })
+                        .done(function (data) {
+                             Swal.fire(
+                                  'Obrisan!',
+                                  'Uspješno ste uklonili vozača iz baze podataka.',
+                                  'success'
+                             );
+                        })
+                        .fail(function (xhr, txtStatus, error) {
+                            console.log('status', xhr.status, 'statusText', xhr.statusText);
+                            console.log('txtStatus', txtStatus);
+                            console.log('error', error);
+                        });
+                        }
+                    })
+                });
+    </script>
+}

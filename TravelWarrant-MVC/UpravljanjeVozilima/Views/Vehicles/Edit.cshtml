@@ -1,0 +1,180 @@
+﻿@model UpravljanjeVozilima.Models.Vehicle
+@using UpravljanjeVozilima.App_Data;
+@{
+    ViewBag.Title = "Uredi vozilo";
+    SelectList ddlVehicleType = new SelectList(
+        VehicleTypeData.listOfVehicleType.ToList(),
+        dataTextField: "Title",
+        dataValueField: "TypeID"
+    );
+    
+    SelectList ddlVehicleBrand = new SelectList(
+        VehicleBrandData.listOfVehicleBrands.ToList(),
+        dataTextField: "Title",
+        dataValueField: "BrandID"
+        );
+}
+
+<div class="d-flex flex-column h-100 bg-light rounded-lg box-shadow-lg p-4">
+    <div class="py-2 p-md-3">
+
+<!-- NASLOV -->
+<h1 class="h3 mb-3 pb-2 text-center text-sm-left">Uredi vozilo</h1>
+<!-- // -->
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(model => model.IDVehicle)
+    <!-- FORMA DODAVANJA -->
+    <div class="row">
+
+        <!-- IME -->
+        <div class="col-sm-6">
+            <div class="form-group">
+                @Html.LabelFor(model => model.Brand.Title)
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">
+                            <i class="fe fe-navigation"></i>
+                        </span>
+                    </div>
+                     @Html.DropDownList(name: "BrandID", selectList: ddlVehicleBrand, htmlAttributes: new { @class = "form-control" })
+                     @Html.HiddenFor(model => model.Brand.BrandID)
+                </div>
+            </div>
+        </div>
+        <!-- // -->
+
+        <!-- PREZIME -->
+        <div class="col-sm-6">
+            <div class="form-group">
+                @Html.LabelFor(model => model.Type.Title)
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">
+                            <i class="fe fe-sliders"></i>
+                        </span>
+                    </div>
+                     @Html.DropDownList(name: "TypeID", selectList: ddlVehicleType, htmlAttributes: new { @class = "form-control" })
+                     @Html.HiddenFor(model => model.Type.TypeID)
+                </div>
+            </div>
+        </div>
+        <!-- // -->
+
+        <!-- LICENCA -->
+        <div class="col-sm-6">
+            <div class="form-group">
+                @Html.LabelFor(model => model.YearOfManufacture)
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">
+                            <i class="fe fe-calendar"></i>
+                        </span>
+                    </div>
+                    @Html.EditorFor(model => model.YearOfManufacture, new {htmlAttributes = new {@class = "form-control", placeholder = "npr. 2002"}})
+                    @Html.ValidationMessageFor(model => model.YearOfManufacture, "", new {@class = "text-danger d-block w-100 pt-2"})
+                </div>
+            </div>
+        </div>
+        <!-- // -->
+
+        <!-- TELEFON -->
+        <div class="col-sm-6">
+            <div class="form-group">
+                @Html.LabelFor(model => model.StartingKM)
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">
+                            <i class="fe fe-database"></i>
+                        </span>
+                    </div>
+                    @Html.EditorFor(model => model.StartingKM, new {htmlAttributes = new {@class = "form-control", placeholder = "npr. 143"}})
+                    @Html.ValidationMessageFor(model => model.StartingKM, "", new {@class = "text-danger d-block w-100 pt-2"})
+                </div>
+            </div>
+        </div>
+        <!-- // -->
+
+        <div class="col-12">
+            <hr class="mt-2 mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center">
+                <button class="btn btn-warning mt-3 mt-sm-0" type="submit"><i class="fe-save font-size-lg mr-2"></i>Uredi vozilo</button>
+            </div>
+        </div>
+    </div>
+}
+    </div>
+    </div>
+
+<!-- JAVASCRIPT -->
+@section scripts{
+    <script type="text/javascript">            
+        //INIT
+        $(document).ready(function () {
+             let brandValue = $("#Brand_BrandID").val(); 
+             $('#BrandID option[value='+brandValue+']').attr('selected','selected');
+             
+             let typeValue = $("#Type_TypeID").val(); 
+             $('#TypeID option[value='+typeValue+']').attr('selected','selected');
+        });
+    
+        //CALLBACK
+        $(document).on("submit", "form", function (e) {
+            e.preventDefault();          
+            const form = $(e.target);
+            let vozilo = {};
+            
+            if (form.valid()) {
+                const params = form.serializeArray();
+                params.forEach(param => {
+                  if (param.name.lastIndexOf('__') !== -1) return;
+                    let propertyName = param.name.substr(param.name.lastIndexOf('.') + 1);
+                    if (propertyName === 'TypeID') {
+                       vozilo.Type = { TypeID: $("#TypeID").val()};
+                     } else if (propertyName === 'BrandID') { 
+                       vozilo.Brand = {BrandID: $("#BrandID").val()};
+                      
+                     } else {                   
+                     vozilo[propertyName] = param.value;
+                     }
+                  });          
+                
+                $.ajax({
+                  url: '@Url.Action(controllerName: "Vehicles", actionName: "Edit")',
+                  data: vozilo,
+                    method: 'POST',
+                    statusCode: {
+                        200: function () {
+                                         Swal.fire({
+                                           icon: 'success',
+                                           title: 'Uspješno ste ažurirali vozilo!',
+                                           showCancelButton: true,
+                                           showConfirmButton: false,
+                                           cancelButtonText: `Povratak`,
+                                         }).then((result) => {
+                                           if (!result.isConfirmed) {
+                                             var url = '@Url.Action(controllerName: "Vehicles", actionName: "Index")';
+                                             window.location.href = url;
+                                           }
+                                         })
+                                     },
+                                     400: function () {
+                                         Toast.fire({ icon: 'error', title: 'Dogodila se neočekivana pogreška!'})
+                                     }
+                                    }
+                                  })
+                                  .done(function (data) {
+                                       console.log(data);         
+                                 })
+                                 .fail(function (xhr, txtStatus, error) {
+                                     console.log('status', xhr.status, 'statusText', xhr.statusText);
+                                     console.log('txtStatus', txtStatus);
+                                     console.log('error', error);
+                                 });
+                             }
+            
+        })
+    </script>
+}
